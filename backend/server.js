@@ -4,6 +4,8 @@ const cors = require("cors");
 require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
+const alertRoutes = require("./routes/alertRoutes");
+const complaintRoutes = require("./routes/complaintRoutes");
 
 const app = express();
 
@@ -15,6 +17,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/alerts", alertRoutes);
+app.use("/api/complaints", complaintRoutes);
 
 const PORT = process.env.PORT || 5000;
 
@@ -27,5 +31,5 @@ mongoose
     });
   })
   .catch((error) => {
-    console.log("MongoDB connection error:", error);
+    console.log("MongoDB connection error:", error.message);
   });
