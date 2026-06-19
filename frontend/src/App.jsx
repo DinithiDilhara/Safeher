@@ -5,6 +5,9 @@ import StudentDashboard from "./pages/StudentDashboard";
 import EmergencyAlert from "./pages/EmergencyAlert";
 import ComplaintForm from "./pages/ComplaintForm";
 import MyReports from "./pages/MyReports";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminAlerts from "./pages/AdminAlerts";
+import AdminComplaints from "./pages/AdminComplaints";
 
 function App() {
   return (
@@ -16,6 +19,9 @@ function App() {
         <Route path="/student/emergency-alert" element={<EmergencyAlert />} />
         <Route path="/student/complaint" element={<ComplaintForm />} />
         <Route path="/student/my-reports" element={<MyReports />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/alerts" element={<AdminAlerts />} />
+        <Route path="/admin/complaints" element={<AdminComplaints />} />
       </Routes>
     </BrowserRouter>
   );
