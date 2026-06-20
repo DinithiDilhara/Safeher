@@ -114,7 +114,7 @@ function EmergencyAlert() {
 
       <main className="emergency-main">
         <section className="emergency-left">
-          <Link to="/student/dashboard" className="back-link">
+          <Link to="/student/dashboard" className="back-dashboard-btn">
             ← Back to Dashboard
           </Link>
 

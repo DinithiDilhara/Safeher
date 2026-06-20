@@ -8,8 +8,6 @@ import {
   Clock,
   CheckCircle,
   MapPin,
-  Calendar,
-  ArrowUp,
   AlertTriangle,
   PieChart,
   BarChart3,
@@ -125,10 +123,6 @@ function AdminDashboard() {
 
           <img src={adminImage} alt="Admin dashboard illustration" />
 
-          <button className="admin-date-button">
-            <Calendar size={18} />
-            Jun 19 – Jun 25, 2026
-          </button>
         </section>
 
         <section className="admin-stats-grid">
@@ -136,7 +130,6 @@ function AdminDashboard() {
             icon={<Bell size={30} />}
             title="Total Alerts"
             value={totalAlerts}
-            change="12%"
             pink
           />
 
@@ -144,7 +137,6 @@ function AdminDashboard() {
             icon={<FilePenLine size={30} />}
             title="Total Complaints"
             value={totalComplaints}
-            change="8%"
             purple
           />
 
@@ -152,16 +144,13 @@ function AdminDashboard() {
             icon={<Clock size={30} />}
             title="Pending Cases"
             value={pendingCases}
-            change="15%"
             orange
-            down
           />
 
           <AdminStat
             icon={<CheckCircle size={30} />}
             title="Resolved Cases"
             value={resolvedCases}
-            change="18%"
             green
           />
 
@@ -169,49 +158,37 @@ function AdminDashboard() {
             icon={<MapPin size={30} />}
             title="Unsafe Area Reports"
             value={unsafeAreaReports}
-            change="6%"
             violet
-            down
           />
         </section>
 
         <section className="admin-chart-grid">
-          <div className="admin-chart-card">
+          <div className="admin-chart-card admin-complaints-overview-card">
             <div className="admin-card-head">
-              <h3>Alerts by Type</h3>
-              <button>This Week ˅</button>
+              <h3>New Complaints</h3>
+              <Link to="/admin/complaints">
+                View All <ChevronRight size={17} />
+              </Link>
             </div>
 
-            <div className="donut-section">
-              <div className="donut-chart">
-                <div>
-                  <h2>{totalAlerts || 0}</h2>
-                  <p>Total Alerts</p>
-                </div>
-              </div>
-
-              <div className="donut-list">
-                <ChartLegend color="purple" label="Emergency" value={totalAlerts} percent="39.5%" />
-                <ChartLegend color="pink" label="Harassment" value={totalComplaints} percent="27.0%" />
-                <ChartLegend color="orange" label="Suspicious Activity" value="45" percent="18.1%" />
-                <ChartLegend color="blue" label="Safety Hazard" value="25" percent="10.1%" />
-                <ChartLegend color="light" label="Other" value="13" percent="5.2%" />
-              </div>
-            </div>
-          </div>
-
-          <div className="admin-chart-card">
-            <div className="admin-card-head">
-              <h3>Complaints by Category</h3>
-              <button>This Week ˅</button>
-            </div>
-
-            <div className="bar-chart">
-              <Bar label="Harassment" value="82" height="82%" purple />
-              <Bar label="Inappropriate Behaviour" value="41" height="52%" pink />
-              <Bar label="Cyberbullying" value="26" height="36%" orange />
-              <Bar label="Stalking" value="15" height="25%" blue />
-              <Bar label="Other" value="9" height="18%" light />
+            <div className="admin-complaints-preview-list">
+              {loading ? (
+                <p className="admin-empty-text">Loading complaints...</p>
+              ) : complaints.length === 0 ? (
+                <p className="admin-empty-text">No complaints found.</p>
+              ) : (
+                complaints.slice(0, 5).map((complaint) => (
+                  <div className="admin-complaint-preview" key={complaint._id}>
+                    <div>
+                      <strong>{complaint.category || "Complaint"}</strong>
+                      <p>{complaint.location || "Not provided"}</p>
+                    </div>
+                    <span className={`admin-status ${getStatusClass(complaint.status || "Pending")}`}>
+                      {complaint.status || "Pending"}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </section>
@@ -366,7 +343,7 @@ function AdminDashboard() {
   );
 }
 
-function AdminStat({ icon, title, value, change, pink, purple, orange, green, violet, down }) {
+function AdminStat({ icon, title, value, pink, purple, orange, green, violet }) {
   let iconClass = "admin-stat-icon";
   if (pink) iconClass += " pink";
   if (purple) iconClass += " purple";
@@ -381,41 +358,7 @@ function AdminStat({ icon, title, value, change, pink, purple, orange, green, vi
       <div>
         <p>{title}</p>
         <h2>{value}</h2>
-        <span className={down ? "stat-change down" : "stat-change"}>
-          <ArrowUp size={14} />
-          {change} from last week
-        </span>
       </div>
-    </div>
-  );
-}
-
-function ChartLegend({ color, label, value, percent }) {
-  return (
-    <div className="chart-legend-row">
-      <span className={`legend-dot ${color}`}></span>
-      <p>{label}</p>
-      <strong>{value}</strong>
-      <small>{percent}</small>
-    </div>
-  );
-}
-
-function Bar({ label, value, height, purple, pink, orange, blue, light }) {
-  let className = "bar-fill";
-  if (purple) className += " purple";
-  if (pink) className += " pink";
-  if (orange) className += " orange";
-  if (blue) className += " blue";
-  if (light) className += " light";
-
-  return (
-    <div className="bar-item">
-      <strong>{value}</strong>
-      <div className="bar-track">
-        <div className={className} style={{ height }}></div>
-      </div>
-      <p>{label}</p>
     </div>
   );
 }

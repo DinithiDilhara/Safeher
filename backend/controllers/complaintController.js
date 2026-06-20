@@ -2,7 +2,7 @@ const Complaint = require("../models/Complaint");
 
 exports.createComplaint = async (req, res) => {
   try {
-    const { studentId, category, location, description, isAnonymous } = req.body;
+    const { category, location, description, isAnonymous, anonymous } = req.body;
 
     if (!category || !location || !description) {
       return res.status(400).json({
@@ -11,11 +11,11 @@ exports.createComplaint = async (req, res) => {
     }
 
     const complaint = await Complaint.create({
-      studentId,
+      studentId: req.user ? req.user._id : null,
       category,
       location,
       description,
-      isAnonymous,
+      isAnonymous: isAnonymous !== undefined ? isAnonymous : anonymous,
     });
 
     res.status(201).json({
@@ -32,7 +32,9 @@ exports.createComplaint = async (req, res) => {
 
 exports.getAllComplaints = async (req, res) => {
   try {
-    const complaints = await Complaint.find().sort({ createdAt: -1 });
+    const complaints = await Complaint.find()
+      .populate("studentId", "name email role")
+      .sort({ createdAt: -1 });
 
     res.status(200).json(complaints);
   } catch (error) {
@@ -43,9 +45,30 @@ exports.getAllComplaints = async (req, res) => {
   }
 };
 
+exports.getMyComplaints = async (req, res) => {
+  try {
+    const complaints = await Complaint.find({
+      studentId: req.user._id,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json(complaints);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch your complaints",
+      error: error.message,
+    });
+  }
+};
+
 exports.updateComplaintStatus = async (req, res) => {
   try {
     const { status } = req.body;
+
+    if (!["Pending", "In Progress", "Resolved"].includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status value",
+      });
+    }
 
     const complaint = await Complaint.findByIdAndUpdate(
       req.params.id,

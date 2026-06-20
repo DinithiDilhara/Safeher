@@ -65,14 +65,20 @@ function AdminComplaints() {
     }
   };
 
-  const updateLocalStatus = (id, newStatus) => {
-    setComplaints((prev) =>
-      prev.map((complaint) =>
-        complaint.id === id ? { ...complaint, status: newStatus } : complaint
-      )
-    );
+  const updateComplaintStatus = async (id, newStatus) => {
+    try {
+      await API.put(`/complaints/${id}/status`, { status: newStatus });
 
-    setOpenMenu(null);
+      setComplaints((prev) =>
+        prev.map((complaint) =>
+          complaint.id === id ? { ...complaint, status: newStatus } : complaint
+        )
+      );
+    } catch (error) {
+      console.log("Failed to update complaint status:", error.message);
+    } finally {
+      setOpenMenu(null);
+    }
   };
 
   const filteredComplaints = complaints.filter((complaint) => {
@@ -340,7 +346,7 @@ function AdminComplaints() {
 
                               <button
                                 onClick={() =>
-                                  updateLocalStatus(
+                                  updateComplaintStatus(
                                     complaint.id,
                                     "In Progress"
                                   )
@@ -352,7 +358,10 @@ function AdminComplaints() {
 
                               <button
                                 onClick={() =>
-                                  updateLocalStatus(complaint.id, "Resolved")
+                                  updateComplaintStatus(
+                                    complaint.id,
+                                    "Resolved"
+                                  )
                                 }
                               >
                                 <CheckCircle size={17} />

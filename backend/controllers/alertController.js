@@ -2,7 +2,7 @@ const Alert = require("../models/Alert");
 
 exports.createAlert = async (req, res) => {
   try {
-    const { studentId, name, emergencyType, location, message } = req.body;
+    const { name, emergencyType, location, message, trustedContact } = req.body;
 
     if (!name || !emergencyType || !location || !message) {
       return res.status(400).json({
@@ -11,11 +11,12 @@ exports.createAlert = async (req, res) => {
     }
 
     const alert = await Alert.create({
-      studentId,
+      studentId: req.user ? req.user._id : null,
       name,
       emergencyType,
       location,
       message,
+      trustedContact,
     });
 
     res.status(201).json({
@@ -32,7 +33,9 @@ exports.createAlert = async (req, res) => {
 
 exports.getAllAlerts = async (req, res) => {
   try {
-    const alerts = await Alert.find().sort({ createdAt: -1 });
+    const alerts = await Alert.find()
+      .populate("studentId", "name email role")
+      .sort({ createdAt: -1 });
 
     res.status(200).json(alerts);
   } catch (error) {
@@ -43,9 +46,30 @@ exports.getAllAlerts = async (req, res) => {
   }
 };
 
+exports.getMyAlerts = async (req, res) => {
+  try {
+    const alerts = await Alert.find({ studentId: req.user._id }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json(alerts);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch your alerts",
+      error: error.message,
+    });
+  }
+};
+
 exports.updateAlertStatus = async (req, res) => {
   try {
     const { status } = req.body;
+
+    if (!["Pending", "In Progress", "Resolved"].includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status value",
+      });
+    }
 
     const alert = await Alert.findByIdAndUpdate(
       req.params.id,

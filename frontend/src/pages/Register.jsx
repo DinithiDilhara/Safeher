@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import API from "../services/api";
-import registerImage from "../assets/student-dashboard.png";
+import registerImage from "../assets/hero-safeher.png";
 
 function Register() {
   const navigate = useNavigate();

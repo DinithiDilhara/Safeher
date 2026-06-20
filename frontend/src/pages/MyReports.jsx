@@ -6,7 +6,6 @@ import {
   Clock,
   CheckCircle,
   Search,
-  Calendar,
   ChevronRight,
   Bell,
   FilePenLine,
@@ -29,7 +28,13 @@ function MyReports() {
   const [searchText, setSearchText] = useState("");
   const [reportType, setReportType] = useState("All Types");
   const [status, setStatus] = useState("All Status");
+  const [dateRange, setDateRange] = useState("All Time");
   const [loading, setLoading] = useState(true);
+
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const reportsPerPage = 5;
 
   useEffect(() => {
     fetchReports();
@@ -37,8 +42,8 @@ function MyReports() {
 
   const fetchReports = async () => {
     try {
-      const alertsResponse = await API.get("/alerts");
-      const complaintsResponse = await API.get("/complaints");
+      const alertsResponse = await API.get("/alerts/my");
+      const complaintsResponse = await API.get("/complaints/my");
 
       setAlerts(alertsResponse.data || []);
       setComplaints(complaintsResponse.data || []);
@@ -54,10 +59,11 @@ function MyReports() {
     type: "Emergency Alert",
     location: alert.location || "Not provided",
     date: alert.createdAt,
-    status: alert.status || "Under Review",
+    status: alert.status || "Pending",
     updated: alert.updatedAt || alert.createdAt,
     icon: <Bell size={20} />,
     category: alert.emergencyType || "Emergency Alert",
+    message: alert.message || "No message provided",
   }));
 
   const complaintReports = complaints.map((complaint) => ({
@@ -69,6 +75,7 @@ function MyReports() {
     updated: complaint.updatedAt || complaint.createdAt,
     icon: getComplaintIcon(complaint.category),
     category: complaint.category || "Complaint",
+    message: complaint.description || "No description provided",
   }));
 
   const allReports = [...alertReports, ...complaintReports].sort(
@@ -84,22 +91,39 @@ function MyReports() {
     const typeMatch =
       reportType === "All Types" || report.type === reportType;
 
-    const statusMatch =
-      status === "All Status" || report.status === status;
+    const statusMatch = status === "All Status" || report.status === status;
 
-    return searchMatch && typeMatch && statusMatch;
+    const dateMatch = checkDateRange(report.date, dateRange);
+
+    return searchMatch && typeMatch && statusMatch && dateMatch;
   });
 
+  const totalPages = Math.ceil(filteredReports.length / reportsPerPage) || 1;
+  const startIndex = (currentPage - 1) * reportsPerPage;
+  const endIndex = startIndex + reportsPerPage;
+  const paginatedReports = filteredReports.slice(startIndex, endIndex);
+
   const totalReports = allReports.length;
+
   const pendingReports = allReports.filter(
     (report) => report.status === "Pending"
   ).length;
+
   const resolvedReports = allReports.filter(
     (report) => report.status === "Resolved"
   ).length;
+
   const underReviewReports = allReports.filter(
     (report) => report.status === "Under Review"
   ).length;
+
+  const handleClearFilters = () => {
+    setSearchText("");
+    setReportType("All Types");
+    setStatus("All Status");
+    setDateRange("All Time");
+    setCurrentPage(1);
+  };
 
   return (
     <div className="my-reports-page">
@@ -136,6 +160,10 @@ function MyReports() {
       </nav>
 
       <main className="reports-main">
+        <Link to="/student/dashboard" className="back-dashboard-btn">
+          ← Back to Dashboard
+        </Link>
+
         <section className="reports-hero">
           <div>
             <h1>My Reports</h1>
@@ -190,7 +218,10 @@ function MyReports() {
                     type="text"
                     placeholder="Search by type, location or keyword..."
                     value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    onChange={(e) => {
+                      setSearchText(e.target.value);
+                      setCurrentPage(1);
+                    }}
                   />
                 </div>
               </div>
@@ -199,7 +230,10 @@ function MyReports() {
                 <label>Report Type</label>
                 <select
                   value={reportType}
-                  onChange={(e) => setReportType(e.target.value)}
+                  onChange={(e) => {
+                    setReportType(e.target.value);
+                    setCurrentPage(1);
+                  }}
                 >
                   <option>All Types</option>
                   <option>Emergency Alert</option>
@@ -209,7 +243,13 @@ function MyReports() {
 
               <div className="filter-group">
                 <label>Status</label>
-                <select value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select
+                  value={status}
+                  onChange={(e) => {
+                    setStatus(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
                   <option>All Status</option>
                   <option>Pending</option>
                   <option>Under Review</option>
@@ -220,7 +260,13 @@ function MyReports() {
 
               <div className="filter-group">
                 <label>Date Range</label>
-                <select>
+                <select
+                  value={dateRange}
+                  onChange={(e) => {
+                    setDateRange(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
                   <option>All Time</option>
                   <option>Today</option>
                   <option>This Week</option>
@@ -229,12 +275,9 @@ function MyReports() {
               </div>
 
               <button
+                type="button"
                 className="clear-filter-button"
-                onClick={() => {
-                  setSearchText("");
-                  setReportType("All Types");
-                  setStatus("All Status");
-                }}
+                onClick={handleClearFilters}
               >
                 Clear Filters
               </button>
@@ -267,7 +310,7 @@ function MyReports() {
                       </td>
                     </tr>
                   ) : (
-                    filteredReports.map((report) => (
+                    paginatedReports.map((report) => (
                       <tr key={report.id}>
                         <td>
                           <div className="report-type-cell">
@@ -282,13 +325,21 @@ function MyReports() {
                         <td>{report.location}</td>
                         <td>{formatDate(report.date)}</td>
                         <td>
-                          <span className={`report-status ${getStatusClass(report.status)}`}>
+                          <span
+                            className={`report-status ${getStatusClass(
+                              report.status
+                            )}`}
+                          >
                             {report.status}
                           </span>
                         </td>
                         <td>{formatDate(report.updated)}</td>
                         <td>
-                          <button className="view-details-button">
+                          <button
+                            type="button"
+                            className="view-details-button"
+                            onClick={() => setSelectedReport(report)}
+                          >
                             View Details
                             <ChevronRight size={16} />
                           </button>
@@ -301,15 +352,40 @@ function MyReports() {
 
               <div className="reports-pagination">
                 <div>
-                  <button>‹</button>
-                  <button className="active-page">1</button>
-                  <button>2</button>
-                  <button>3</button>
-                  <button>›</button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    ‹
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, index) => (
+                    <button
+                      type="button"
+                      key={index + 1}
+                      className={
+                        currentPage === index + 1 ? "active-page" : ""
+                      }
+                      onClick={() => setCurrentPage(index + 1)}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    ›
+                  </button>
                 </div>
 
                 <p>
-                  Showing 1–{filteredReports.length} of {totalReports} reports
+                  Showing {filteredReports.length === 0 ? 0 : startIndex + 1}–
+                  {Math.min(endIndex, filteredReports.length)} of{" "}
+                  {filteredReports.length} reports
                 </p>
               </div>
             </div>
@@ -321,8 +397,8 @@ function MyReports() {
                 <div>
                   <h3>Report Details</h3>
                   <p>
-                    Click on any report to view full details, updates, and
-                    responses from our team.
+                    Click View Details to see full report information and
+                    updates.
                   </p>
                 </div>
                 <Search size={48} />
@@ -362,6 +438,57 @@ function MyReports() {
           </aside>
         </section>
       </main>
+
+      {selectedReport && (
+        <div className="report-modal-overlay">
+          <div className="report-modal">
+            <button
+              type="button"
+              className="modal-close-btn"
+              onClick={() => setSelectedReport(null)}
+            >
+              ×
+            </button>
+
+            <h2>Report Details</h2>
+
+            <div className="modal-detail-row">
+              <strong>Report Type:</strong>
+              <span>{selectedReport.type}</span>
+            </div>
+
+            <div className="modal-detail-row">
+              <strong>Category:</strong>
+              <span>{selectedReport.category}</span>
+            </div>
+
+            <div className="modal-detail-row">
+              <strong>Location:</strong>
+              <span>{selectedReport.location}</span>
+            </div>
+
+            <div className="modal-detail-row">
+              <strong>Status:</strong>
+              <span>{selectedReport.status}</span>
+            </div>
+
+            <div className="modal-detail-row">
+              <strong>Date Submitted:</strong>
+              <span>{formatDate(selectedReport.date)}</span>
+            </div>
+
+            <div className="modal-detail-row">
+              <strong>Last Updated:</strong>
+              <span>{formatDate(selectedReport.updated)}</span>
+            </div>
+
+            <div className="modal-message-box">
+              <strong>Message / Description:</strong>
+              <p>{selectedReport.message}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="footer">
         <div className="footer-about">
@@ -416,7 +543,16 @@ function MyReports() {
   );
 }
 
-function ReportStatCard({ icon, title, value, text, purple, orange, green, violet }) {
+function ReportStatCard({
+  icon,
+  title,
+  value,
+  text,
+  purple,
+  orange,
+  green,
+  violet,
+}) {
   let className = "report-stat-icon";
 
   if (purple) className += " purple";
@@ -425,16 +561,13 @@ function ReportStatCard({ icon, title, value, text, purple, orange, green, viole
   if (violet) className += " violet";
 
   return (
-    <div className="report-stat-card">
+    <div className="report-stat-card no-arrow">
       <div className={className}>{icon}</div>
       <div>
         <h4>{title}</h4>
         <h2>{value}</h2>
         <p>{text}</p>
       </div>
-      <button>
-        <ChevronRight size={18} />
-      </button>
     </div>
   );
 }
@@ -470,6 +603,46 @@ function getStatusClass(status) {
   if (status === "Pending") return "pending";
   if (status === "In Progress") return "progress";
   return "review";
+}
+
+function checkDateRange(dateValue, range) {
+  if (range === "All Time") return true;
+  if (!dateValue) return false;
+
+  const reportDate = new Date(dateValue);
+  const today = new Date();
+
+  const reportDay = new Date(
+    reportDate.getFullYear(),
+    reportDate.getMonth(),
+    reportDate.getDate()
+  );
+
+  const todayDay = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+
+  if (range === "Today") {
+    return reportDay.getTime() === todayDay.getTime();
+  }
+
+  if (range === "This Week") {
+    const sevenDaysAgo = new Date(todayDay);
+    sevenDaysAgo.setDate(todayDay.getDate() - 7);
+
+    return reportDay >= sevenDaysAgo && reportDay <= todayDay;
+  }
+
+  if (range === "This Month") {
+    return (
+      reportDate.getMonth() === today.getMonth() &&
+      reportDate.getFullYear() === today.getFullYear()
+    );
+  }
+
+  return true;
 }
 
 function formatDate(dateValue) {

@@ -28,6 +28,11 @@ const alertSchema = new mongoose.Schema(
       required: true,
     },
 
+    trustedContact: {
+      type: String,
+      required: false,
+    },
+
     status: {
       type: String,
       enum: ["Pending", "In Progress", "Resolved"],

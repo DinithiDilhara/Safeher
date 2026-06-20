@@ -55,13 +55,20 @@ function AdminAlerts() {
     }
   };
 
-  const updateLocalStatus = (id, newStatus) => {
-    setAlerts((prevAlerts) =>
-      prevAlerts.map((alert) =>
-        alert.id === id ? { ...alert, status: newStatus } : alert
-      )
-    );
-    setOpenMenu(null);
+  const updateAlertStatus = async (id, newStatus) => {
+    try {
+      await API.put(`/alerts/${id}/status`, { status: newStatus });
+
+      setAlerts((prevAlerts) =>
+        prevAlerts.map((alert) =>
+          alert.id === id ? { ...alert, status: newStatus } : alert
+        )
+      );
+    } catch (error) {
+      console.log("Failed to update alert status:", error.message);
+    } finally {
+      setOpenMenu(null);
+    }
   };
 
   const filteredAlerts = alerts.filter((alert) => {
@@ -350,7 +357,7 @@ function AdminAlerts() {
 
                               <button
                                 onClick={() =>
-                                  updateLocalStatus(alert.id, "In Progress")
+                                  updateAlertStatus(alert.id, "In Progress")
                                 }
                               >
                                 <Zap size={17} />
@@ -359,7 +366,7 @@ function AdminAlerts() {
 
                               <button
                                 onClick={() =>
-                                  updateLocalStatus(alert.id, "Resolved")
+                                  updateAlertStatus(alert.id, "Resolved")
                                 }
                               >
                                 <CheckCircle size={17} />

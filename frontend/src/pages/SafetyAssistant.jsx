@@ -182,6 +182,9 @@ function SafetyAssistant() {
       </nav>
 
       <main className="assistant-main">
+        <Link to="/student/dashboard" className="back-dashboard-btn">
+             ←     Back to Dashboard
+        </Link>
         <section className="assistant-hero">
           <div className="assistant-heading">
             <div className="assistant-icon-box">
