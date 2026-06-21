@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
+  Shield,
   ShieldCheck,
+  Users,
+  Lightbulb,
   FileText,
   Clock,
   CheckCircle,
@@ -28,6 +31,7 @@ function StudentDashboard() {
     event.preventDefault();
 
     const section = document.getElementById(sectionId);
+
     if (section) {
       section.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -60,7 +64,10 @@ function StudentDashboard() {
 
     sectionIds.forEach((id) => {
       const section = document.getElementById(id);
-      if (section) observer.observe(section);
+
+      if (section) {
+        observer.observe(section);
+      }
     });
 
     return () => observer.disconnect();
@@ -69,6 +76,13 @@ function StudentDashboard() {
   useEffect(() => {
     const fetchMyReports = async () => {
       try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          setStatsLoading(false);
+          return;
+        }
+
         const [alertsResponse, complaintsResponse] = await Promise.all([
           API.get("/alerts/my"),
           API.get("/complaints/my"),
@@ -87,16 +101,20 @@ function StudentDashboard() {
   }, []);
 
   const allMyReports = [...myAlerts, ...myComplaints];
+
+  const totalReports = allMyReports.length;
+
   const pendingReports = allMyReports.filter(
     (report) => report.status === "Pending"
   ).length;
+
   const inProgressReports = allMyReports.filter(
     (report) => report.status === "In Progress"
   ).length;
+
   const resolvedReports = allMyReports.filter(
     (report) => report.status === "Resolved"
   ).length;
-  const totalReports = allMyReports.length;
 
   return (
     <div className="student-dashboard-page">
@@ -105,6 +123,7 @@ function StudentDashboard() {
           <div className="logo-box">
             <ShieldCheck size={28} />
           </div>
+
           <h2>
             Safe<span>Her</span>
           </h2>
@@ -118,6 +137,7 @@ function StudentDashboard() {
           >
             Home
           </a>
+
           <a
             className={activeSection === "features" ? "active" : ""}
             href="#features"
@@ -125,6 +145,7 @@ function StudentDashboard() {
           >
             Features
           </a>
+
           <a
             className={activeSection === "how-it-works" ? "active" : ""}
             href="#how-it-works"
@@ -132,6 +153,7 @@ function StudentDashboard() {
           >
             How It Works
           </a>
+
           <a
             className={activeSection === "resources" ? "active" : ""}
             href="#resources"
@@ -139,6 +161,7 @@ function StudentDashboard() {
           >
             Resources
           </a>
+
           <a
             className={activeSection === "about" ? "active" : ""}
             href="#about"
@@ -146,6 +169,7 @@ function StudentDashboard() {
           >
             About Us
           </a>
+
           <a
             className={activeSection === "contact" ? "active" : ""}
             href="#contact"
@@ -159,6 +183,7 @@ function StudentDashboard() {
           <Link to="/login" className="login-button">
             Login
           </Link>
+
           <Link to="/register" className="register-button">
             Register
           </Link>
@@ -168,7 +193,8 @@ function StudentDashboard() {
       <main className="student-dashboard-main">
         <section className="student-welcome" id="home">
           <div>
-            <h1>Welcome back, {user?.name || "Test Student"} 👋</h1>
+            <h1>Welcome back, {user?.name || "Student"} 👋</h1>
+
             <p>
               Your safety matters. We’re here to support you and keep our campus
               community safe.
@@ -250,8 +276,8 @@ function StudentDashboard() {
             </div>
 
             <EmptyDashboardBlock
-              title="Add your own activity"
-              text="Connect this section to your own report feed or remove it entirely if you do not want sample activity here."
+              title="No recent activity yet"
+              text="Your submitted alerts and complaints will appear here after you create them."
             />
           </div>
 
@@ -262,8 +288,8 @@ function StudentDashboard() {
               </div>
 
               <EmptyDashboardBlock
-                title="Add your own safety tips"
-                text="Replace this placeholder with your own tips, guidance cards, or linked resources."
+                title="Stay alert and aware"
+                text="Use the emergency alert for urgent situations and submit complaints for safety concerns."
               />
             </div>
 
@@ -271,11 +297,12 @@ function StudentDashboard() {
               <div>
                 <h2>You’re Not Alone</h2>
                 <p>
-                  Add your own support message or remove this card if you do not
-                  want a promo block here.
+                  SafeHer is designed to help students report issues and get
+                  support through a safer campus workflow.
                 </p>
               </div>
-              <EmptyBadge>Custom content</EmptyBadge>
+
+              <EmptyBadge>Support available</EmptyBadge>
             </div>
           </div>
         </section>
@@ -283,6 +310,7 @@ function StudentDashboard() {
         <section className="dashboard-info-section" id="resources">
           <div className="section-head">
             <h2>Helpful Resources</h2>
+
             <Link to="/student/safety-assistant">
               Open Safety Assistant <ChevronRight size={18} />
             </Link>
@@ -293,11 +321,14 @@ function StudentDashboard() {
               <div className="info-card-icon pink">
                 <Bell size={24} />
               </div>
+
               <h3>Emergency Alert</h3>
+
               <p>
                 Send an instant alert when you feel unsafe so campus support can
                 respond quickly.
               </p>
+
               <Link to="/student/emergency-alert">Open Alert Form</Link>
             </div>
 
@@ -305,11 +336,14 @@ function StudentDashboard() {
               <div className="info-card-icon purple">
                 <MessageCircle size={24} />
               </div>
+
               <h3>Safety Assistant</h3>
+
               <p>
                 Ask questions about staying safe, reporting incidents, or what
                 to do in urgent situations.
               </p>
+
               <Link to="/student/safety-assistant">Ask the Assistant</Link>
             </div>
 
@@ -317,11 +351,14 @@ function StudentDashboard() {
               <div className="info-card-icon green">
                 <FileText size={24} />
               </div>
+
               <h3>My Reports</h3>
+
               <p>
                 Review all of your alerts and complaints and track their current
                 progress.
               </p>
+
               <Link to="/student/my-reports">View Reports</Link>
             </div>
           </div>
@@ -330,6 +367,7 @@ function StudentDashboard() {
         <section className="dashboard-info-section about-section" id="about">
           <div className="section-head">
             <h2>About SafeHer</h2>
+
             <a href="#contact">
               Need help? Contact us <ChevronRight size={18} />
             </a>
@@ -338,7 +376,9 @@ function StudentDashboard() {
           <div className="about-grid">
             <div className="about-card">
               <Shield size={24} />
+
               <h3>Our Mission</h3>
+
               <p>
                 SafeHer helps female students report issues, request help, and
                 stay informed with a simple campus safety workflow.
@@ -347,7 +387,9 @@ function StudentDashboard() {
 
             <div className="about-card">
               <Users size={24} />
+
               <h3>Community Support</h3>
+
               <p>
                 We focus on quick reporting, transparent status updates, and
                 safer daily decisions for students and staff.
@@ -356,7 +398,9 @@ function StudentDashboard() {
 
             <div className="about-card highlight">
               <Lightbulb size={24} />
+
               <h3>What You Can Do</h3>
+
               <p>
                 Use the dashboard to send alerts, submit complaints, view your
                 reports, and get safety guidance whenever you need it.
@@ -368,6 +412,7 @@ function StudentDashboard() {
         <section className="dashboard-info-section contact-section" id="contact">
           <div className="section-head">
             <h2>Contact & Support</h2>
+
             <a href="mailto:support@safeher.app">
               support@safeher.app <ChevronRight size={18} />
             </a>
@@ -376,29 +421,38 @@ function StudentDashboard() {
           <div className="contact-grid">
             <div className="contact-card">
               <Mail size={24} />
+
               <h3>Email Support</h3>
+
               <p>Send non-urgent questions or feedback to our support team.</p>
+
               <a href="mailto:support@safeher.app">support@safeher.app</a>
             </div>
 
             <div className="contact-card">
               <Bell size={24} />
+
               <h3>Campus Safety Desk</h3>
+
               <p>
                 For urgent matters, contact campus security or use the emergency
                 alert feature right away.
               </p>
-              <a href="/student/emergency-alert">Go to Emergency Alert</a>
+
+              <Link to="/student/emergency-alert">Go to Emergency Alert</Link>
             </div>
 
             <div className="contact-card">
               <AlertTriangle size={24} />
+
               <h3>Response Times</h3>
+
               <p>
                 Emergency alerts should be used immediately. Complaint updates
                 are visible in My Reports after admin review.
               </p>
-              <a href="/student/my-reports">Check My Reports</a>
+
+              <Link to="/student/my-reports">Check My Reports</Link>
             </div>
           </div>
         </section>
@@ -410,10 +464,12 @@ function StudentDashboard() {
             <div className="logo-box small">
               <ShieldCheck size={24} />
             </div>
+
             <h2>
               Safe<span>Her</span>
             </h2>
           </div>
+
           <p>
             Building a safer, stronger, and more supportive campus for every
             female student.
@@ -432,12 +488,13 @@ function StudentDashboard() {
           <h3>Useful Links</h3>
           <a href="#about">About Us</a>
           <a href="#contact">Contact</a>
-          <a href="/student/safety-assistant">Safety Assistant</a>
-          <a href="/student/my-reports">My Reports</a>
+          <Link to="/student/safety-assistant">Safety Assistant</Link>
+          <Link to="/student/my-reports">My Reports</Link>
         </div>
 
         <div className="footer-column">
           <h3>Connect With Us</h3>
+
           <div className="socials">
             <span>IG</span>
             <span>X</span>
@@ -446,10 +503,12 @@ function StudentDashboard() {
               <Mail size={18} />
             </span>
           </div>
+
           <p className="priority">
             <ShieldCheck size={16} />
             Your Safety. Our Priority.
           </p>
+
           <p>© 2026 SafeHer. All rights reserved.</p>
         </div>
       </footer>
@@ -461,6 +520,7 @@ function StatCard({ icon, title, value, text }) {
   return (
     <div className="student-stat-card">
       <div className="stat-icon">{icon}</div>
+
       <div>
         <h4>{title}</h4>
         <h2>{value}</h2>
@@ -474,34 +534,16 @@ function ActionCard({ to, icon, title, text, pink }) {
   return (
     <Link to={to} className="student-action-card">
       <div className={`action-icon ${pink ? "pink" : ""}`}>{icon}</div>
+
       <div>
         <h3>{title}</h3>
         <p>{text}</p>
       </div>
+
       <span>
         <ChevronRight size={18} />
       </span>
     </Link>
-  );
-}
-
-function ActivityItem({ icon, title, location, date, status, statusClass }) {
-  return (
-    <div className="activity-item">
-      <div className="activity-icon">{icon}</div>
-
-      <div className="activity-info">
-        <h4>{title}</h4>
-        <p>{location}</p>
-      </div>
-
-      <div className="activity-date">
-        <Calendar size={16} />
-        {date}
-      </div>
-
-      <span className={`status-pill ${statusClass}`}>{status}</span>
-    </div>
   );
 }
 
