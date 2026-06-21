@@ -11,7 +11,8 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://safeher.netlify.app",
+   "https://safeher-woad.vercel.app",
+  "https://safeher-fxe4fdkvp-dinithi-safeher.vercel.app",
 ];
 
 // Middleware
